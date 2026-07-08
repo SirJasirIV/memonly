@@ -2,6 +2,7 @@ const { get } = require("express/lib/response");
 const bcrypt = require("bcryptjs");
 const pool = require("../db/pool");
 const { rows } = require("pg/lib/defaults");
+const indexRouter = require("../routes/indexrouter");
 
 function getSignUp(req, res) {
     res.render("form");
@@ -17,7 +18,7 @@ async function postSignUp(req, res){
  const hashedPass = await bcrypt.hash(password, 10);
  await pool.query(
     "INSERT INTO users (first_name, last_name, username, password) VALUES ($1, $2, $3, $4)",
-    [firstName, secondName, username, password]
+    [firstName, secondName, username, hashedPass]
  );
  res.send("Form received!");
  console.log(hashedPass);
@@ -35,12 +36,12 @@ async function postLogin(req, res) {
     }
    const match = await bcrypt.compare(password, user.password)
    if (match) {
-    console.log("YOU LOGGED IN!!");
-    return res.send("YOU LOGGED INNNN!")
+    req.session.userId = user.id;
+    console.log(req.session);
+    return res.redirect("/home")
    } else if (!match) {
     return res.send("Password Incorrect!")
-   }
-   
+   } 
 };
 
 module.exports = {
